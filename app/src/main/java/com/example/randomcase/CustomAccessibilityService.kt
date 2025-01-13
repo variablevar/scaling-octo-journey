@@ -14,13 +14,18 @@ import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.ImageView
 import android.widget.Toast
+import java.io.BufferedReader
 import kotlin.random.Random
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+
 
 class CustomAccessibilityService : AccessibilityService() {
     private var windowManager: WindowManager? = null
     private var floatingButton: View? = null
     private var isButtonAdded = false
     private var emojiMap: Map<String, String> = emptyMap()
+    private var listEmojis: List<Emoji> = emptyList()
     private val leetMapping = mapOf(
         'a' to '@', 'e' to '3', 'i' to '1',
         'o' to '0', 't' to '7', 's' to '5'
@@ -30,6 +35,7 @@ class CustomAccessibilityService : AccessibilityService() {
         super.onServiceConnected()
         windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
         emojiMap = loadEmojiMapFromCsv("emojis.csv")
+        listEmojis = loadEmojis(this)
 
         createFloatingButton()
     }
@@ -76,18 +82,21 @@ class CustomAccessibilityService : AccessibilityService() {
                             initialTouchY = event.rawY
                             return true
                         }
+
                         MotionEvent.ACTION_MOVE -> {
                             val deltaX = (event.rawX - initialTouchX).toInt()
                             val deltaY = (event.rawY - initialTouchY).toInt()
 
                             if (Math.abs(deltaX) > CLICK_ACTION_THRESHOLD ||
-                                Math.abs(deltaY) > CLICK_ACTION_THRESHOLD) {
+                                Math.abs(deltaY) > CLICK_ACTION_THRESHOLD
+                            ) {
                                 layoutParams.x = initialX + deltaX
                                 layoutParams.y = initialY + deltaY
                                 windowManager?.updateViewLayout(view, layoutParams)
                             }
                             return true
                         }
+
                         MotionEvent.ACTION_UP -> {
                             val clickDuration = System.currentTimeMillis() - startClickTime
                             val deltaX = Math.abs(event.rawX - initialTouchX)
@@ -95,7 +104,8 @@ class CustomAccessibilityService : AccessibilityService() {
 
                             if (clickDuration < MAX_CLICK_DURATION &&
                                 deltaX < CLICK_ACTION_THRESHOLD &&
-                                deltaY < CLICK_ACTION_THRESHOLD) {
+                                deltaY < CLICK_ACTION_THRESHOLD
+                            ) {
                                 view.performClick()
                             }
                             return true
@@ -122,7 +132,15 @@ class CustomAccessibilityService : AccessibilityService() {
 
         AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
             .setTitle("Transform Text")
-            .setItems(arrayOf("rAnDoM cAsE", "UPPERCASE", "lowercase", "Emojify", "Leet")) { _, which ->
+            .setItems(
+                arrayOf(
+                    "rAnDoM cAsE",
+                    "UPPERCASE",
+                    "lowercase",
+                    "Emojify",
+                    "Leet"
+                )
+            ) { _, which ->
                 transformSelectedText(nodeWithSelection, which)
             }
             .create()
@@ -184,7 +202,10 @@ class CustomAccessibilityService : AccessibilityService() {
         return nodes
     }
 
-    private fun findEditableNodesRecursive(node: AccessibilityNodeInfo, nodes: MutableList<AccessibilityNodeInfo>) {
+    private fun findEditableNodesRecursive(
+        node: AccessibilityNodeInfo,
+        nodes: MutableList<AccessibilityNodeInfo>
+    ) {
         if (node.isEditable) {
             nodes.add(node)
         }
@@ -200,13 +221,13 @@ class CustomAccessibilityService : AccessibilityService() {
         val start = node.textSelectionStart
         val end = node.textSelectionEnd
 
-        if (start >= 0 && end > start) {
+        if (start in 0..<end) {
             val selectedText = text.substring(start, end)
             val transformedText = when (transformationType) {
                 0 -> randomizeCase(selectedText)
                 1 -> selectedText.uppercase()
                 2 -> selectedText.lowercase()
-                3 -> emojifyText(selectedText)
+                3 -> emojifyTextV2(selectedText)
                 4 -> leetCase(selectedText)
                 else -> selectedText
             }
@@ -242,6 +263,39 @@ class CustomAccessibilityService : AccessibilityService() {
             }
         }
         return words.joinToString(" ")
+    }
+
+    private fun emojifyTextV2(input: String): String {
+        val rawText = input.split(" ")
+        val processedText = rawText.map { word ->
+            var replacedWord = word
+            for (model in listEmojis) {
+                if (model.keywords.contains(word)) {
+                    replacedWord = model.char
+                    break // Stop checking once a match is found
+                }
+            }
+            if (word == replacedWord) {
+                word
+            } else {
+                "$word $replacedWord"
+            }
+        }
+        return processedText.joinToString(" ")
+    }
+
+    private fun loadEmojis(context: Context): List<Emoji> {
+        val jsonString = loadJsonFromAssets(context, "emoji.json")
+        return parseEmojisFromJson(jsonString)
+    }
+
+    private fun loadJsonFromAssets(context: Context, fileName: String): String {
+        return context.assets.open(fileName).bufferedReader().use(BufferedReader::readText)
+    }
+
+    private fun parseEmojisFromJson(jsonString: String): List<Emoji> {
+        val listType = object : TypeToken<List<Emoji>>() {}.type
+        return Gson().fromJson(jsonString, listType)
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
