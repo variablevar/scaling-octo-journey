@@ -27,8 +27,32 @@ class CustomAccessibilityService : AccessibilityService() {
     private var emojiMap: Map<String, String> = emptyMap()
     private var listEmojis: List<Emoji> = emptyList()
     private val leetMapping = mapOf(
-        'a' to '@', 'e' to '3', 'i' to '1',
-        'o' to '0', 't' to '7', 's' to '5'
+        'a' to 'a',
+        'b' to 'ß',
+        'c' to 'c',
+        'd' to 'Ð',
+        'e' to '3',
+        'f' to 'ƒ',
+        'g' to '9',
+        'h' to 'h',
+        'i' to '¡',
+        'j' to 'ʝ',
+        'k' to 'k',
+        'l' to '1',
+        'm' to 'm',
+        'n' to 'n',
+        'o' to '0',
+        'p' to 'p',
+        'q' to 'q',
+        'r' to 'r',
+        's' to '5',
+        't' to '†',
+        'u' to 'บ',
+        'v' to '√',
+        'w' to 'w',
+        'x' to 'x',
+        'y' to '¥',
+        'z' to '2'
     )
 
     override fun onServiceConnected() {
@@ -138,7 +162,7 @@ class CustomAccessibilityService : AccessibilityService() {
                     "UPPERCASE",
                     "lowercase",
                     "Emojify",
-                    "Leet"
+                    "Leet",
                 )
             ) { _, which ->
                 transformSelectedText(nodeWithSelection, which)
@@ -192,7 +216,7 @@ class CustomAccessibilityService : AccessibilityService() {
                         node.textSelectionStart != node.textSelectionEnd
             }
         } finally {
-            rootNode.recycle()
+            // rootNode.recycle()
         }
     }
 

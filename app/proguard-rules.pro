@@ -19,3 +19,24 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Keep model classes
+-keepclassmembers class * {
+    @com.google.gson.annotations.SerializedName <fields>;
+}
+
+# Keep Gson methods
+-keep public class com.google.gson.** { *; }
+
+-keep class com.example.randomcase.** { *; }
+# Keep the service implementation
+-keep class com.example.randomcase.CustomAccessibilityService { *; }
+
+# Keep service-related annotations
+-keepattributes *Annotation*
+
+# Prevent Compose runtime issues
+-keep class androidx.compose.** { *; }
+-dontwarn androidx.compose.**
+
+-keep class com.example.randomcase.MainActivity { *; }
