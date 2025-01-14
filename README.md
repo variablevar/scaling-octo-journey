@@ -19,7 +19,7 @@ apply various text transformations seamlessly, including:
 
 ### How it works !
 
-![](https://drive.google.com/file/d/1S_5JdIDxfnbYPhYXr5KdtAe1G3rO8BSa/view?usp=sharing)
+[![Image Description](https://i.imgur.com/7pVGSbr.png)](https://imgur.com/7pVGSbr)
 
 ## Installation
 
