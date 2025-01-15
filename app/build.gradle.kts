@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.randomcase"
+    namespace = "com.variablevar.randomcase"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.randomcase"
+        applicationId = "com.variablevar.randomcase"
         minSdk = 24
         targetSdk = 34
         versionCode = 1
